@@ -1,5 +1,6 @@
 package ee.kregor.veebipood.service;
 
+import ee.kregor.veebipood.dto.OrderRowDto;
 import ee.kregor.veebipood.entity.Order;
 import ee.kregor.veebipood.entity.OrderRow;
 import ee.kregor.veebipood.entity.Person;
@@ -20,34 +21,39 @@ import java.util.List;
 @AllArgsConstructor
 public class OrderService {
 
+    // @Autowired --> Dependency Injection
+    // @RequiredArgConstructor --> Dependency Injection
+
+    // tagataustal tõmmatakse sisse tema mälukohaga
+
     private OrderRepository orderRepository;
     private PersonRepository personRepository;
     private ProductRepository productRepository;
 
-    public Order saveOrder(Long personId, String parcelMachine, List<OrderRow> orderRows) {
+    public Order saveOrder(Long personId, String parcelMachine, List<OrderRowDto> orderRows) {
         Order order = new Order();
-        order.setCreated(new Date());
+        order.setCreated(new Date()); // import ka
         order.setParcelMachine(parcelMachine);
-        //order.setOrderRows(orderRows);
-        Person person = personRepository.findById(personId).orElseThrow();
+//        order.setOrderRows(orderRows);
+        Person person = personRepository.findById(personId).orElseThrow(); // kui isikut ei leia --> exception
         order.setPerson(person);
-        order.setTotal(calculateOrderTotal(orderRows));
+        order.setTotal(calculateOrderTotal(orderRows, order));
         return orderRepository.save(order);
     }
 
-    private double calculateOrderTotal(List<OrderRow> orderRows) {
+    private double calculateOrderTotal(List<OrderRowDto> orderRows, Order order) {
         double total = 0;
         List<OrderRow> orderRowsInOrder = new ArrayList<>();
-        for (OrderRow orderRow : orderRows) {
-            Product product = productRepository.findById(orderRow.productId()).orElseThrow();
-            total += product.getPrice() * orderRow.quantity();
+        for (OrderRowDto orderRowDto : orderRows) {
+            Product product = productRepository.findById(orderRowDto.productId()).orElseThrow();
+            total += product.getPrice() * orderRowDto.quantity();
 
             OrderRow orderRowInOrder = new OrderRow();
             orderRowInOrder.setProduct(product);
             orderRowInOrder.setQuantity(orderRowDto.quantity());
-            orderRowsInOrder.add(Order)
+            orderRowsInOrder.add(orderRowInOrder);
         }
-        saveOrder().setOrderRows(orderRowsInOrder);
+        order.setOrderRows(orderRowsInOrder);
         return total;
     }
 }

@@ -22,24 +22,24 @@ public class DecathlonController {
     @Autowired
     private TulemusRepository tulemusRepository;
 
-    // Kõik sportlased
+
     @GetMapping("/sportlased")
     public List<Sportlane> getSportlased() {
         return sportlaneRepository.findAll();
     }
 
-    // Üks sportlane ID järgi
+
     @GetMapping("/sportlased/{id}")
     public Sportlane getSportlane(@PathVariable Long id) {
         return sportlaneRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Sportlast ID-ga " + id + " ei leitud"));
     }
 
-    // Uue sportlase lisamine
+
     @PostMapping("/sportlased")
     @ResponseStatus(HttpStatus.CREATED)
     public Sportlane addSportlane(@RequestBody SportlaneDTO sportlaneDTO) {
-        // Valideeri sisendid
+
         if (sportlaneDTO.getEesnimi() == null || sportlaneDTO.getEesnimi().trim().isEmpty()) {
             throw new RuntimeException("Eesnimi on kohustuslik");
         }
@@ -61,7 +61,7 @@ public class DecathlonController {
         return sportlaneRepository.save(sportlane);
     }
 
-    // Sportlase kustutamine
+
     @DeleteMapping("/sportlased/{id}")
     public String deleteSportlane(@PathVariable Long id) {
         if (!sportlaneRepository.existsById(id)) {
@@ -72,11 +72,11 @@ public class DecathlonController {
         return "Sportlane kustutatud";
     }
 
-    // Tulemuse lisamine sportlasele
+
     @PostMapping("/tulemused")
     @ResponseStatus(HttpStatus.CREATED)
     public Tulemus addTulemus(@RequestBody TulemusDTO tulemusDTO) {
-        // Valideeri sisendid
+
         if (tulemusDTO.getSportlaneId() == null) {
             throw new RuntimeException("Sportlane ID on kohustuslik");
         }
@@ -85,7 +85,7 @@ public class DecathlonController {
             throw new RuntimeException("Spordiala on kohustuslik");
         }
 
-        // Kontrolli, kas spordiala on lubatud
+
         if (!tulemusDTO.getSpordiala().equals("100m") && !tulemusDTO.getSpordiala().equals("kaugushüpe")) {
             throw new RuntimeException("Spordiala peab olema kas '100m' või 'kaugushüpe'");
         }
@@ -94,11 +94,11 @@ public class DecathlonController {
             throw new RuntimeException("Tulemus peab olema positiivne arv");
         }
 
-        // Leia sportlane
+
         Sportlane sportlane = sportlaneRepository.findById(tulemusDTO.getSportlaneId())
                 .orElseThrow(() -> new RuntimeException("Sportlast ID-ga " + tulemusDTO.getSportlaneId() + " ei leitud"));
 
-        // Kontrolli, kas sellel spordialal on juba tulemus olemas
+
         boolean onOlemas = tulemusRepository.existsBySportlaneIdAndSpordiala(
                 tulemusDTO.getSportlaneId(),
                 tulemusDTO.getSpordiala()
@@ -116,7 +116,7 @@ public class DecathlonController {
         return tulemusRepository.save(tulemus);
     }
 
-    // Sportlase kõik tulemused
+
     @GetMapping("/sportlased/{id}/tulemused")
     public List<Tulemus> getSportlaseTulemused(@PathVariable Long id) {
         if (!sportlaneRepository.existsById(id)) {

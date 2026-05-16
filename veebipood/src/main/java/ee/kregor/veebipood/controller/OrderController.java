@@ -1,5 +1,6 @@
 package ee.kregor.veebipood.controller;
 
+import ee.kregor.veebipood.dto.OrderRowDto;
 import ee.kregor.veebipood.entity.Order;
 import ee.kregor.veebipood.entity.OrderRow;
 import ee.kregor.veebipood.repository.OrderRepository;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@CrossOrigin(origins = "*")
 @RestController
 @AllArgsConstructor
 public class OrderController {
@@ -31,7 +33,7 @@ public class OrderController {
     @PostMapping("orders")
     public Order addOrder(@RequestParam Long personId,
                                 @RequestParam(required = false) String parcelMachine,
-                                @RequestBody List<OrderRow> orderRows){
+                                @RequestBody List<OrderRowDto> orderRows){
         return orderService.saveOrder(personId, parcelMachine, orderRows); // siin salvestab
         //return orderRepository.findAll(); // siin on uuenenud seis
     }

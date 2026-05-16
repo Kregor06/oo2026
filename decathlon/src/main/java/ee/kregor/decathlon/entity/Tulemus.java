@@ -18,8 +18,8 @@ public class Tulemus {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String spordiala; // "100m" või "kaugushüpe"
-    private double tulemus; // 12.5 või 8.0
+    private String spordiala;
+    private double tulemus;
 
     @ManyToOne
     @JoinColumn(name = "sportlane_id")

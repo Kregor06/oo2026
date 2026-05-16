@@ -23,7 +23,7 @@ public class Order { // ERROR: syntax error at or near "order"
     private Date created;
     private double total;
     private String parcelMachine;
-s
+
     @ManyToOne
     private Person person;
 

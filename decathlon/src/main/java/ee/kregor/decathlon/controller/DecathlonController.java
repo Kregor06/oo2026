@@ -7,9 +7,13 @@ import ee.kregor.decathlon.entity.Tulemus;
 import ee.kregor.decathlon.repository.SportlaneRepository;
 import ee.kregor.decathlon.repository.TulemusRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.web.client.RestTemplate;
 import java.util.List;
 
 @RestController
@@ -24,8 +28,41 @@ public class DecathlonController {
 
 
     @GetMapping("/sportlased")
-    public List<Sportlane> getSportlased() {
-        return sportlaneRepository.findAll();
+    public Page<Sportlane> getSportlased(
+            @RequestParam(defaultValue = "0")   int page,
+            @RequestParam(defaultValue = "5")   int size,
+            @RequestParam(defaultValue = "")    String riik,
+            @RequestParam(defaultValue = "id,asc") String sort,
+            @RequestParam(required = false)     String sortTulemus
+    ) {
+
+        if (sortTulemus != null && !sortTulemus.isBlank()) {
+            String[] parts = sortTulemus.split(",");
+            String spordiala = parts[0];
+            boolean asc = parts.length < 2 || parts[1].equalsIgnoreCase("asc");
+            Pageable pageable = PageRequest.of(page, size);
+            if (asc) {
+                return sportlaneRepository.findAllSortByTulemusAsc(riik, spordiala, pageable);
+            } else {
+                return sportlaneRepository.findAllSortByTulemusDesc(riik, spordiala, pageable);
+            }
+        }
+
+
+        String[] sortParts = sort.split(",");
+        String sortField = sortParts[0];
+        Sort.Direction direction = sortParts.length > 1 && sortParts[1].equalsIgnoreCase("desc")
+                ? Sort.Direction.DESC : Sort.Direction.ASC;
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortField));
+        return sportlaneRepository.findByRiikContainingIgnoreCase(riik, pageable);
+    }
+
+
+
+    @GetMapping("/sportlased/riigid")
+    public List<String> getRiigid() {
+        return sportlaneRepository.findAllRiigid();
     }
 
 
@@ -85,7 +122,6 @@ public class DecathlonController {
             throw new RuntimeException("Spordiala on kohustuslik");
         }
 
-
         if (!tulemusDTO.getSpordiala().equals("100m") && !tulemusDTO.getSpordiala().equals("kaugushüpe")) {
             throw new RuntimeException("Spordiala peab olema kas '100m' või 'kaugushüpe'");
         }
@@ -94,10 +130,8 @@ public class DecathlonController {
             throw new RuntimeException("Tulemus peab olema positiivne arv");
         }
 
-
         Sportlane sportlane = sportlaneRepository.findById(tulemusDTO.getSportlaneId())
                 .orElseThrow(() -> new RuntimeException("Sportlast ID-ga " + tulemusDTO.getSportlaneId() + " ei leitud"));
-
 
         boolean onOlemas = tulemusRepository.existsBySportlaneIdAndSpordiala(
                 tulemusDTO.getSportlaneId(),
@@ -124,5 +158,21 @@ public class DecathlonController {
         }
 
         return tulemusRepository.findBySportlaneId(id);
+    }
+
+
+
+    private final RestTemplate restTemplate = new RestTemplate();
+    private static final String MOCKAPI_KOHTUNIKUD_URL = "https://6a08ab0cfa9b27c848fb3abb.mockapi.io/api/v1/kohtunikud";
+    private static final String MOCKAPI_ASUKOHAD_URL = "https://6a08ab0cfa9b27c848fb3abb.mockapi.io/api/v1/asukohad";
+
+    @GetMapping("/kohtunikud")
+    public Object getKohtunikud() {
+        return restTemplate.getForObject(MOCKAPI_KOHTUNIKUD_URL, Object.class);
+    }
+
+    @GetMapping("/asukohad")
+    public Object getAsukohad() {
+        return restTemplate.getForObject(MOCKAPI_ASUKOHAD_URL, Object.class);
     }
 }
